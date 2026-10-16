@@ -14,5 +14,5 @@ end(e){if(!this.current||e.pointerId!==this.pointer)return;const s=this.current;
 rebuild(){this.base.getContext('2d').clearRect(0,0,this.W,this.H);for(const s of this.strokes){this.paintStroke(s);this.commit(s)}this.hasInk=this.strokes.length>0;this.compose()}
 undo(){if(this.current)return;if(!this.strokes.length)return toast('还没有可以撤销的笔画');this.strokes.pop();this.rebuild()}
 clear(){cancelAnimationFrame(this.frame);this.frame=0;this.current=null;this.strokes=[];this.hasInk=false;this.base.getContext('2d').clearRect(0,0,this.W,this.H);this.ink.getContext('2d').clearRect(0,0,this.W,this.H);this.compose()}
-export(){const c=this.layer(),x=c.getContext('2d');x.fillStyle='#fcf9ef';x.fillRect(0,0,this.W,this.H);x.drawImage(this.base,0,0);if(this.current){x.globalAlpha=this.current.tone;x.drawImage(this.ink,0,0);x.globalAlpha=1}x.font='18px serif';x.fillStyle='#8d927d';x.fillText('墨润心源 · '+activeEmotion,28,this.H-24);return c.toDataURL('image/png')}
+export(){const c=this.layer(),x=c.getContext('2d');x.fillStyle='#fcf9ef';x.fillRect(0,0,this.W,this.H);x.drawImage(this.base,0,0);if(this.current){x.globalAlpha=this.current.tone;x.drawImage(this.ink,0,0);x.globalAlpha=1}x.font='18px "Morun Song",serif';x.fillStyle='#8d927d';x.fillText('墨润心源 · '+activeEmotion,28,this.H-24);return c.toDataURL('image/png')}
 };
