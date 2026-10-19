@@ -1,6 +1,6 @@
-Noto Serif SC（思源宋体同源的简体中文宋体），字重 400–600。
+Noto Serif SC（宋体），字重 400–600。
 
 来源：https://github.com/google/fonts/tree/main/ofl/notoserifsc
 授权：SIL Open Font License 1.1，见 OFL-NotoSerifSC.txt。
 
-morun-song.woff2 是界面字符子集，随站点同源托管。手机无需预装字体，网页不依赖 Google 字体服务。自定义输入中不在子集内的字使用系统宋体或通用衬线字体。
+本地 WOFF2 子集覆盖 V2 网页、共享文案与小程序界面中的全部 672 个汉字，构建时逐字检查字形覆盖。网页全局使用同一宋体字体族。用户输入的生僻字仍按系统宋体回退。字体随站点同源加载，不请求外部字体服务。
