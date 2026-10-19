@@ -8,3 +8,9 @@
 
 /* Allow native vertical scrolling while recognizing horizontal activity swipes. */
 .event-banner{touch-action:pan-y pinch-zoom;user-select:none;-webkit-user-select:none}
+
+/* Keep the complete home greeting on one line at phone widths. */
+.greeting{font-size:clamp(14px,4.8vw,20px);letter-spacing:0;max-width:100%;white-space:nowrap}
+
+/* Center both seal characters within the red rectangle. */
+.brand .seal{display:inline-block;text-align:center;letter-spacing:0;vertical-align:middle}
