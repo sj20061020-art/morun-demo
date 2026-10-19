@@ -1,4 +1,15 @@
 const assert=require('node:assert/strict'),M=require('../shared/model');
+async function checkDemoAndMigration(){
+ const m=memory(),r=new M.Repository(m.adapter);await r.init();const session=await r.newSession();
+ for(let i=0;i<M.demoQuestions.length;i++){const q=M.demoQuestions[i],out=await r.chat(session.id,q.question.replace(/[，。？]/g,''));assert.equal(out.risk,false);assert.equal(out.session.messages.at(-1).text,q.answer);assert.equal(M.demoProgress(out.session.messages),i+1)}
+ const restored=new M.Repository(m.adapter);await restored.init();assert.equal(M.demoProgress(restored.snapshot().sessions[0].messages),6);
+ const paused=await r.chat(session.id,'我想伤害自己');assert.equal(paused.risk,true);await assert.rejects(()=>r.chat(session.id,M.demoQuestions[0].question),/暂停/);
+ const old=r.snapshot();old.experts.find(e=>e.id==='expert-chen').name='陈林';old.experts[0].name='自定义专家';old.bookings.push({id:'old-booking',expertId:'expert-chen',title:'陈林'});m.data.set(M.KEY,old);
+ const migrated=new M.Repository(m.adapter);await migrated.init();assert.equal(migrated.snapshot().experts.find(e=>e.id==='expert-chen').name,'陈琳');assert.equal(migrated.snapshot().bookings[0].title,'陈琳');assert.equal(migrated.snapshot().experts[0].name,'自定义专家');assert.deepEqual(migrated.snapshot().sessions,old.sessions);
+ const second=new M.Repository(m.adapter);await second.init();assert.deepEqual(second.snapshot(),migrated.snapshot());
+ console.log('PASS six ordered demo replies, punctuation matching, resumed progress, risk precedence and non-destructive expert-name migration');
+}
+checkDemoAndMigration().catch(e=>{console.error(e);process.exitCode=1});
 function memory(){const data=new Map();let fail=false;return{data,setFail(v){fail=v},adapter:{async get(k){return data.has(k)?M.clone(data.get(k)):null},async set(k,v){if(fail)throw Error('quota');data.set(k,M.clone(v))},async remove(k){data.delete(k)}}}}
 (async()=>{const m=memory(),r=new M.Repository(m.adapter);await r.init();assert.equal(r.snapshot().cases.length,2);assert.equal(r.snapshot().works.length,0);
 const report=await r.addReport(Array(12).fill(3));assert.deepEqual(report.values,[9,9,9,9]);assert(!report.text.includes('诊断为'));await assert.rejects(()=>r.addReport([0,1]),/12/);await r.deleteReport(report.id);assert.equal(r.snapshot().reports.length,0);

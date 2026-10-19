@@ -24,6 +24,34 @@ const inkColors=['#222222','#555555','#999999'];
 const paintingColors=['#222222','#687B78','#936C50','#495D74'];
 const guides=['放慢呼吸，让笔尖随心流动。不必追求笔画好看，只需感受此刻。','缓缓落笔，给自己一段安静的时间。每一笔，都可以重新开始。','允许情绪出现，也允许它流动。用线条，为心里的感受留一点空间。'];
 const greetings=['今天也辛苦了，给心情留一方素笺。','不用急着变好，先听听此刻的自己。','一呼一吸，一笔一墨，慢慢回到当下。','愿你在这里，找到安放感受的方式。'];
+const demoQuestions=[
+ {
+  "question": "你好，最近学习压力很大。",
+  "answer": "你好，听起来你最近一直在努力，也承担了不少压力。我们可以先给自己留一点空白：放松肩膀，慢慢呼吸，再想一想，今天的心情更像一条紧绷的线，还是一团浓墨？"
+ },
+ {
+  "question": "一想到考试，我就静不下来。",
+  "answer": "考试前有些紧张，是可以理解的。此刻不必急着把所有事情都解决。试着跟着呼吸画三条长线：吸气时停一停，呼气时缓缓落笔。你愿意先从一笔开始吗？"
+ },
+ {
+  "question": "我想试试书法，应该怎么开始？",
+  "answer": "可以进入“正念书法书写”，选择软笔行书和中墨，先写一个“安”字，或者只画一个圆。不需要写得漂亮，留意笔尖移动时的节奏，以及肩膀和手腕的感觉就好。"
+ },
+ {
+  "question": "可是我不会画画，也能表达情绪吗？",
+  "answer": "当然可以。情绪表达不需要绘画基础。你可以在水墨创作里选一种接近心情的颜色，随意画点、线或墨块。画面不必像什么，它只需要承载你此刻的一点感受。"
+ },
+ {
+  "question": "我画了一团乱线，这样可以吗？",
+  "answer": "可以，乱线也是一种表达。我们不根据画面判断你是什么样的人，也不作心理诊断。你可以看看：哪一条线最像此刻的心情？也可以在旁边留一点空白，给自己一个可以停下来的地方。"
+ },
+ {
+  "question": "现在轻松一点了，我想把这份感受留下来。",
+  "answer": "很高兴你觉察到了这一点变化。可以保存作品，选择情绪标签，再写一句“刚才的我……现在的我……”。作品会保存在这台设备的情绪作品库里，你以后可以回来看看。"
+ }
+];
+const normalizeQuestion=text=>String(text||'').replace(/[\s，。？！、,.?!：:；;‘’“”\"']/g,'');
+function demoProgress(messages){let step=0;for(const m of messages||[]){if(step<demoQuestions.length&&m.role==='user'&&normalizeQuestion(m.text)===normalizeQuestion(demoQuestions[step].question))step++}return step}
 const replyRules=[
  {words:['学习','考试','成绩','压力','作业'],reply:'听起来，学习占用了你不少心力。要不要先画三条缓慢的长线？可以想一想：此刻的压力更像浓墨，还是一片淡淡的雾？'},
  {words:['生气','烦','愤怒','躁'],reply:'这些感受可以先被允许。你可以用枯笔画一些交错的短线，再换成湿笔慢慢覆盖一角。看看哪一处线条最像此刻的你。'},
@@ -33,13 +61,13 @@ const replyRules=[
  {words:['开心','平静','放松','谢谢'],reply:'这一点轻松很值得被记住。可以把它变成一枚月影、一片留白，或一句简短的书写，收藏在自己的作品库里。'}
 ];
 function matchRisk(text){const s=String(text||'').replace(/\s/g,'');return riskWords.filter(w=>s.indexOf(w)!==-1)}
-function reply(text){const rule=replyRules.find(r=>r.words.some(w=>text.indexOf(w)!==-1));return rule?rule.reply:'我会以书画和情绪表达的方式陪你做一点探索。此刻心里的感受，更像一条线、一团墨，还是一片留白？你也可以试试书写，或预约线下活动演示。'}
+function reply(text){const preset=demoQuestions.find(q=>normalizeQuestion(q.question)===normalizeQuestion(text));if(preset)return preset.answer;const rule=replyRules.find(r=>r.words.some(w=>text.indexOf(w)!==-1));return rule?rule.reply:'我会以书画和情绪表达的方式陪你做一点探索。此刻心里的感受，更像一条线、一团墨，还是一片留白？你也可以试试书写，或预约线下活动演示。'}
 function dateLabel(time){return new Date(time).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
 function nextDate(days){const d=new Date();d.setDate(d.getDate()+days);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function initial(){const now=new Date().toISOString(),d7=nextDate(7),d14=nextDate(14);return{
  version:2,profile:{id:uid('student'),nickname:'墨友',grade:'初中',contact:'',privateByDefault:true},works:[],reports:[],sessions:[],bookings:[],
  experts:[{id:'expert-zheng',name:'郑红兰老师',title:'示例专家 · 资料待核验',specialty:'青少年情绪表达、书画美育（模拟）',bio:'姓名为项目方案中的示例，不代表真实入驻或服务承诺。身份、擅长方向及排班均为演示资料，正式使用前须核验。',slots:[d7+' 10:00',d7+' 15:00',d14+' 10:00'],active:true,avatar:0},
- {id:'expert-chen',name:'陈林',title:'示例资料 · 非真实入驻',specialty:'音乐艺术疗愈、音乐心理学（模拟）',bio:'方案提供的示例介绍为“马来西亚音乐艺术疗愈、音乐心理学博士”，未经核验。仅用于演示卡片和预约流程，不作资质背书。',slots:[d7+' 14:00',d14+' 15:00'],active:true,avatar:1}],
+ {id:'expert-chen',name:'陈琳',title:'示例资料 · 非真实入驻',specialty:'音乐艺术疗愈、音乐心理学（模拟）',bio:'方案提供的示例介绍为“马来西亚音乐艺术疗愈、音乐心理学博士”，未经核验。仅用于演示卡片和预约流程，不作资质背书。',slots:[d7+' 14:00',d14+' 15:00'],active:true,avatar:1}],
  activities:[{id:'activity-1',title:'一笔一息 · 线条静心团辅',time:d7+' 14:00',place:'示例美育教室 A',capacity:12,intro:'以呼吸与线条为线索，体验正念书写和感受分享。模拟活动，不实际招生。'},
  {id:'activity-2',title:'以墨为语 · 情绪水墨小组',time:d14+' 10:00',place:'示例书画工作坊',capacity:10,intro:'用湿墨、枯笔与留白表达当下心情。模拟活动，不实际招生。'}],
  cases:[{id:'demo-risk-1',userId:'DEMO-STUDENT-01',sessionId:null,time:now,status:'待跟进',tags:['关键词触发','预置模拟'],demo:true,transcript:[{role:'user',text:'（模拟案例）我压力很大，活着没意思。',time:now}],notes:[]},
@@ -47,7 +75,7 @@ function initial(){const now=new Date().toISOString(),d7=nextDate(7),d14=nextDat
 }}
 class Repository{
  constructor(adapter){this.adapter=adapter;this.state=null;this.queue=Promise.resolve()}
- async init(){this.state=await this.adapter.get(KEY);if(!this.state||this.state.version!==2){this.state=initial();await this.adapter.set(KEY,this.state)}return this.snapshot()}
+ async init(){this.state=await this.adapter.get(KEY);if(!this.state||this.state.version!==2){this.state=initial();await this.adapter.set(KEY,this.state)}else if(this.state.experts.some(e=>e.id==='expert-chen'&&e.name==='陈林')||this.state.bookings.some(b=>b.expertId==='expert-chen'&&b.title==='陈林')){await this.transaction(s=>{for(const e of s.experts)if(e.id==='expert-chen'&&e.name==='陈林')e.name='陈琳';for(const b of s.bookings)if(b.expertId==='expert-chen'&&b.title==='陈林')b.title='陈琳'})}return this.snapshot()}
  snapshot(){return clone(this.state)}
  transaction(fn){const task=this.queue.then(async()=>{const draft=clone(this.state),result=fn(draft);await this.adapter.set(KEY,draft);this.state=draft;return result});this.queue=task.catch(()=>{});return task}
  async media(work){return work.image||await this.adapter.get(MEDIA+work.id)||''}
@@ -75,5 +103,5 @@ class Repository{
  caseNote(id,text){if(!String(text).trim())return Promise.reject(Error('留言不能为空'));return this.transaction(s=>{const c=s.cases.find(c=>c.id===id);if(!c)throw Error('工单不存在');c.notes.push({text:String(text).slice(0,400),time:new Date().toISOString()})})}
  async reset(){const previous=this.state.works.slice();await this.adapter.set(KEY,initial());this.state=await this.adapter.get(KEY);for(const w of previous)await this.adapter.remove(MEDIA+w.id)}
 }
-return{Repository,KEY,MEDIA,uid,clone,moods,disclaimer,riskNotice,riskWords,matchRisk,questions,dimensions,calligraphyBrushes,paintingBrushes,inkColors,paintingColors,guides,greetings,dateLabel,nextDate};
+return{Repository,KEY,MEDIA,uid,clone,moods,disclaimer,riskNotice,riskWords,matchRisk,demoQuestions,demoProgress,questions,dimensions,calligraphyBrushes,paintingBrushes,inkColors,paintingColors,guides,greetings,dateLabel,nextDate};
 });
