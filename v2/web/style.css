@@ -10,7 +10,11 @@
 .event-banner{touch-action:pan-y pinch-zoom;user-select:none;-webkit-user-select:none}
 
 /* Keep the complete home greeting on one line at phone widths. */
-.greeting{font-size:clamp(14px,4.8vw,20px);letter-spacing:0;max-width:100%;white-space:nowrap}
+.greeting{font-size:clamp(14px,calc(5.8vw - 2.32px),22px);letter-spacing:0;max-width:100%;white-space:nowrap}
 
 /* Center both seal characters within the red rectangle. */
 .brand .seal{display:inline-block;text-align:center;letter-spacing:0;vertical-align:middle}
+
+/* User-provided landscape, placed below the home greeting for legibility. */
+.welcome-art{background:none;padding-bottom:0}
+.welcome-art::after{content:'';display:block;height:clamp(100px,33vw,158px);margin:8px -20px 0;background:url('../assets/home-landscape.jpg') center top/100% auto no-repeat}
