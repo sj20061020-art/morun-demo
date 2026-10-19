@@ -1,0 +1,9 @@
+{
+  "desc": "Local competition demo; no public indexing needed.",
+  "rules": [
+    {
+      "action": "disallow",
+      "page": "*"
+    }
+  ]
+}

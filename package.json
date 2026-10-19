@@ -1,0 +1,11 @@
+{
+  "name": "morun-xinyuan-v2-demo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Local-only WeChat mini program and static web demonstration",
+  "scripts": {
+    "test": "node tests/domain.cjs",
+    "check": "node scripts/check.cjs",
+    "serve": "node serve.cjs"
+  }
+}

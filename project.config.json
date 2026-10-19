@@ -1,0 +1,17 @@
+{
+  "description": "墨润心源 V2 · 微信原生小程序 Demo",
+  "miniprogramRoot": "miniprogram/",
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "projectname": "morun-xinyuan-v2",
+  "libVersion": "3.9.3",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "minified": true,
+    "urlCheck": false,
+    "checkInvalidKey": true,
+    "checkSiteMap": false
+  },
+  "condition": {}
+}

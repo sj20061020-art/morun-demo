@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "pages/splash/splash",
+    "pages/home/home",
+    "pages/write/write",
+    "pages/paint/paint",
+    "pages/test/test",
+    "pages/result/result",
+    "pages/chat/chat",
+    "pages/library/library",
+    "pages/booking/booking",
+    "pages/experts/experts",
+    "pages/profile/profile",
+    "pages/admin-risk/admin-risk",
+    "pages/admin-booking/admin-booking",
+    "pages/admin-experts/admin-experts",
+    "pages/admin-works/admin-works"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#F8F5EE",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}
