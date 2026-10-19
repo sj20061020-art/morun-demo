@@ -21,7 +21,7 @@
     <view class="notice danger">⚠ AI仅美育情绪陪伴，不做心理诊断，出现强烈痛苦请寻求可信任成年人或专业老师支持。
 本地预设问答，无大模型、无真人实时值守。</view>
     <scroll-view scroll-y class="chat-log" scroll-into-view="{{chatBottom}}"><view wx:for="{{messages}}" wx:key="index" id="message-{{index}}" class="bubble {{item.role === 'assistant' ? 'assistant' : ''}}"><text>{{item.text}}</text><text class="tiny">{{item.date}}</text></view><view wx:if="{{chatPaused}}" class="notice danger"><text>{{riskNotice}}</text><button class="primary" data-route="booking" bindtap="go">预约专家咨询演示</button></view></scroll-view>
-    <view wx:if="{{!chatPaused}}" class="demo-prompt"><view><text class="tiny">预设问答演示 · {{demoQuestion ? demoStep + 1 : demoCount}} / {{demoCount}}</text><text class="small block">{{demoQuestion || '本组问答已完成，可以继续自由聊聊。'}}</text></view><button size="mini" data-action="{{demoQuestion ? 'demo-fill' : 'chat-new'}}" bindtap="act">{{demoQuestion ? '填入下一问' : '重新演示'}}</button></view><view class="chat-input"><input value="{{chatText}}" maxlength="600" placeholder="说说此刻的感受…" disabled="{{chatPaused}}" bindinput="chatInput" confirm-type="send" bindconfirm="noop"/><button class="primary" size="mini" disabled="{{chatPaused}}" data-action="chat-send" bindtap="act">发送</button></view>
+    <view class="chat-input"><input value="{{chatText}}" maxlength="600" placeholder="说说此刻的感受…" disabled="{{chatPaused}}" bindinput="chatInput" confirm-type="send" bindconfirm="noop"/><button class="primary" size="mini" disabled="{{chatPaused}}" data-action="chat-send" bindtap="act">发送</button></view>
   </view>
   <scroll-view wx:elif="{{route !== 'splash'}}" scroll-y class="page-content">
     <view wx:if="{{route === 'home'}}">

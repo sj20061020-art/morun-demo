@@ -19,4 +19,3 @@
 .welcome-art{background:none;padding-bottom:0}
 .welcome-art::after{content:'';display:block;height:clamp(100px,33vw,158px);margin:8px -20px 0;background:url('../assets/home-landscape.jpg') center top/100% auto no-repeat}
 
-.demo-prompt{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:#eeeee4;flex:none}.demo-prompt>div{flex:1;min-width:0}.demo-prompt p{font-size:11px;line-height:1.7;margin-top:3px}.demo-prompt .btn{flex:none;font-size:10px;white-space:nowrap}.demo-prompt .tiny{font-size:9px}
