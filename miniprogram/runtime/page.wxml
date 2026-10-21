@@ -72,4 +72,5 @@
 
 第十四届全国大学生数字媒体科技作品及创意竞赛参赛演示，非商用。</text></view>
   </scroll-view></view></view>
+<view wx:if="{{inkPresentation}}" class="ink-screen"><view class="ink-screen-head"><view><text class="eyebrow">墨润心源</text><text class="title block">落笔成境</text></view><button size="mini" data-action="ink-library" bindtap="act">跳过动画</button></view><canvas id="inkRevealCanvas" type="2d" class="ink-scene-canvas"/><view class="ink-screen-bottom"><text class="ink-caption">{{inkCaption}}</text><text class="tiny">你的作品已收藏</text><view class="tools"><button wx:if="{{inkComplete}}" size="mini" data-action="ink-replay" bindtap="act">再赏一遍</button><button size="mini" data-action="ink-continue" bindtap="act">继续书写</button><button size="mini" class="primary" data-action="ink-library" bindtap="act">查看作品 →</button></view></view></view>
 </view>
