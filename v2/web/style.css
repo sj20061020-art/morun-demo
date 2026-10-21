@@ -18,7 +18,7 @@
 
 /* User-provided landscape, placed below the home greeting for legibility. */
 .welcome-art{background:none;padding-bottom:0}
-.welcome-art::after{content:'';display:block;height:clamp(100px,33vw,158px);margin:8px -20px 0;background:url('../assets/home-landscape.jpg') center top/100% auto no-repeat}
+.welcome-art::after{content:'';display:block;aspect-ratio:2448/1170;margin:8px -20px 0;background:url('../assets/home-mountains.jpg') center/100% 100% no-repeat}
 
 
 /* Appreciation opens above the mounted canvas, preserving all strokes. */
