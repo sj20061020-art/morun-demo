@@ -149,4 +149,8 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
  case'expertForm':await repo.saveExpert({...values,id:f.dataset.id||null,active:values.active==='on'});closeModal();await render();toast('专家资料已保存');break;
  }}catch(e){error(e)}finally{if(submit&&submit.isConnected)submit.disabled=false}});
 window.addEventListener('hashchange',()=>{closeModal();render().catch(error)});document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseWritingMusic();else if(current==='write'&&musicWanted&&!musicPausedByUser)playWritingMusic()});window.addEventListener('pagehide',()=>pauseWritingMusic());
+// Every document entry starts at the cover, including saved links to other sections.
+history.replaceState(null,'',location.pathname+location.search+'#splash');
+// Returning from another site may restore this document from the browser cache.
+window.addEventListener('pageshow',event=>{if(event.persisted){closeModal();history.replaceState(null,'',location.pathname+location.search+'#splash');render().catch(error)}});
 repo.init().then(()=>render()).catch(e=>{$('#main').innerHTML=`<h1>本地存储暂不可用</h1><p>${esc(e.message)}</p><p>请在允许本地存储的普通浏览器环境中重试。</p>`});
