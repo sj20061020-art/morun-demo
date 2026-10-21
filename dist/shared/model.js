@@ -1,5 +1,6 @@
 /* Pure local domain model shared by the web preview and native WeChat pages.
- * No requests, LLM SDK, diagnosis scoring or remote notifications are made.
+ * No requests, LLM SDK, diagnosis or remote notifications are made.
+ * PHQ-9 is a screening score, kept separate from the self-authored awareness radar.
  * Adapters use localStorage (preview) / wx.setStorage (mini program).
  * Image payloads are separate storage keys so one metadata key does not grow
  * with every picture. Transactions report quota failures and never fake success.
@@ -17,6 +18,12 @@ const questions=[
  ['我脑海里想法很多，难以静下来',0],['休息之后，我仍然觉得很累',1],['有情绪时，我习惯独自憋着',2],['我常常缺少做事的兴致',3],
  ['想到学习或未来，我会感到紧张',0],['我的身体常常紧绷、不易放松',1],['我希望找到表达情绪的方式',2],['我很难从日常小事中感到轻松',3]
 ].map((q,i)=>({id:i,text:q[0],dimension:q[1]}));
+const phqQuestions=["做任何事都觉得沉闷或者根本不想做任何事","情绪低落、抑郁或绝望","难于入睡；半夜会醒，或相反，睡觉时间过多","觉得疲倦或没有活力","胃口极差或饮食过量","不喜欢自己——觉得自己做得不好、对自己失望或有负家人期望","难于集中精神做事，例如看报纸或看电视","其它人反映你行动或说话迟缓；或者相反，你比平常活动更多——坐立不安、停不下来","想到自己最好去死或者自残"];
+const phqSource='https://www.phqscreeners.com/images/sites/g/files/g10060481/f/201412/PHQ9_Simplified%20Chinese%20for%20Mainland%20China.pdf';
+const phqSupport='无论总分多少，如果你有伤害自己的想法，请及时告诉可信任的成年人，并寻求专业人员支持。若此刻难以保证安全，请立即联系身边的人或就近急救人员。本机没有远程通知或真人值守。';
+const artReferences={"write":[{"id":"lanting","title":"王羲之《兰亭序》","image":"lanting.jpg","intro":"行书的连贯与呼吸","observation":"留意字与字之间的呼应，以及同一个字在不同位置的姿态。顺着笔画方向，用目光慢慢走一遍。","practice":"选择一个喜欢的字，先观察，再尝试书写。把注意力放在提按与停顿，不必追求形似。"},{"id":"gaoshen","title":"颜真卿《自书告身帖》","image":"gaoshen.jpg","intro":"楷书的端正与安定","observation":"观察点画的厚薄、字的重心和行列间的空白。感受稳健结构中的力量。","practice":"选择一个字，放慢速度，留意每次起笔和收笔。也可以只练一横一竖。"}],"paint":[{"id":"shitao-1","title":"石涛《山水册页》· 其一","image":"shitao-1.jpg","intro":"远近层次与浓淡变化","observation":"从远近层次、浓淡变化和留白三个角度观察山水。让目光从近处缓缓走向远处，感受画面的疏密。","practice":"试着用淡墨铺远山、浓墨点近景，再留出一片空白。参考是一种启发，画面可以随自己的感受生长。"},{"id":"shitao-2","title":"石涛《山水册页》· 其二","image":"shitao-2.jpg","intro":"山水留白与当下感受","observation":"观察画面中的浓墨与留白。留意人物与周围空间的关系，让目光在空白处停一停，感受安静。","practice":"用浓墨画出近景，再给画面留一片空白。可以在其中点一个小小的人物，也可以只留下此刻的感受。"}]};
+function assessment(id){return id==='phq9'?{id:'phq9',title:'PHQ-9 情绪筛查',period:'过去两周',questions:phqQuestions.map(text=>({text})),options:['从来没有','有几天','刚超过一半天数','接近每天'],description:'请回想过去两周受到这些问题困扰的频率。建议在专业人员指导下填写；结果仅作筛查参考，不是诊断。'}:{id:'awareness',title:'美育情绪觉察',period:'最近一周',questions,options:['几乎没有','偶尔','经常','总是'],description:'自编美育觉察问卷，仅作感受参考，不是心理诊断。'}}
+function doctorExamples(){const d=nextDate(7);return [{id:'expert-doctor-zhou',name:'周医生（虚构示例）',title:'示例医院 · 精神心理科医生',specialty:'青少年情绪困扰、睡眠问题（模拟）',bio:'虚构医生资料，仅演示医院医生类型的预约流程，不对应真实医院、医师或资质。实际就医请通过医院正规渠道。',slots:[d+' 09:00',d+' 11:00'],active:true,avatar:0},{id:'expert-doctor-lin',name:'林医生（虚构示例）',title:'示例医院 · 儿童青少年门诊',specialty:'青少年心理健康、家庭沟通（模拟）',bio:'虚构医生资料，未关联真实医疗机构，不提供在线诊疗或处方。仅用于本机预约演示。',slots:[d+' 14:30',d+' 16:00'],active:true,avatar:1}]}
 const dimensions=['思绪纷扰','身心疲惫','表达受阻','低落感受'];
 const calligraphyBrushes=['硬笔楷书','软笔行书','枯笔飞白','浓墨重笔'];
 const paintingBrushes=['润水笔','浓墨笔','枯笔刷','淡墨渲染笔','点墨笔'];
@@ -65,17 +72,17 @@ function reply(text){const preset=demoQuestions.find(q=>normalizeQuestion(q.ques
 function dateLabel(time){return new Date(time).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
 function nextDate(days){const d=new Date();d.setDate(d.getDate()+days);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function initial(){const now=new Date().toISOString(),d7=nextDate(7),d14=nextDate(14);return{
- version:2,profile:{id:uid('student'),nickname:'墨友',grade:'初中',contact:'',privateByDefault:true},works:[],reports:[],sessions:[],bookings:[],
+ version:2,artAssessmentRevision:1,profile:{id:uid('student'),nickname:'墨友',grade:'初中',contact:'',privateByDefault:true},works:[],reports:[],sessions:[],bookings:[],
  experts:[{id:'expert-zheng',name:'郑红兰老师',title:'示例专家 · 资料待核验',specialty:'青少年情绪表达、书画美育（模拟）',bio:'姓名为项目方案中的示例，不代表真实入驻或服务承诺。身份、擅长方向及排班均为演示资料，正式使用前须核验。',slots:[d7+' 10:00',d7+' 15:00',d14+' 10:00'],active:true,avatar:0},
- {id:'expert-chen',name:'陈琳',title:'示例资料 · 非真实入驻',specialty:'音乐艺术疗愈、音乐心理学（模拟）',bio:'方案提供的示例介绍为“马来西亚音乐艺术疗愈、音乐心理学博士”，未经核验。仅用于演示卡片和预约流程，不作资质背书。',slots:[d7+' 14:00',d14+' 15:00'],active:true,avatar:1}],
+ {id:'expert-chen',name:'陈琳',title:'示例资料 · 非真实入驻',specialty:'音乐艺术疗愈、音乐心理学（模拟）',bio:'方案提供的示例介绍为“马来西亚音乐艺术疗愈、音乐心理学博士”，未经核验。仅用于演示卡片和预约流程，不作资质背书。',slots:[d7+' 14:00',d14+' 15:00'],active:true,avatar:1},...doctorExamples()],
  activities:[{id:'activity-1',title:'一笔一息 · 线条静心团辅',time:d7+' 14:00',place:'示例美育教室 A',capacity:12,intro:'以呼吸与线条为线索，体验正念书写和感受分享。模拟活动，不实际招生。'},
- {id:'activity-2',title:'以墨为语 · 情绪水墨小组',time:d14+' 10:00',place:'示例书画工作坊',capacity:10,intro:'用湿墨、枯笔与留白表达当下心情。模拟活动，不实际招生。'}],
+ {id:'activity-2',title:'心栖意境 · 线下书画静心活动',time:d14+' 10:00',place:'示例书画工作坊',capacity:10,intro:'用湿墨、枯笔与留白表达当下心情。模拟活动，不实际招生。'}],
  cases:[{id:'demo-risk-1',userId:'DEMO-STUDENT-01',sessionId:null,time:now,status:'待跟进',tags:['关键词触发','预置模拟'],demo:true,transcript:[{role:'user',text:'（模拟案例）我压力很大，活着没意思。',time:now}],notes:[]},
  {id:'demo-risk-2',userId:'DEMO-STUDENT-02',sessionId:null,time:now,status:'跟进中',tags:['关键词触发','预置模拟'],demo:true,transcript:[{role:'user',text:'（模拟案例）我有自伤的想法。',time:now}],notes:[{text:'演示：建议联系可信任成年人，并协助了解线下支持渠道。',time:now}]}]
 }}
 class Repository{
  constructor(adapter){this.adapter=adapter;this.state=null;this.queue=Promise.resolve()}
- async init(){this.state=await this.adapter.get(KEY);if(!this.state||this.state.version!==2){this.state=initial();await this.adapter.set(KEY,this.state)}else if(this.state.experts.some(e=>e.id==='expert-chen'&&e.name==='陈林')||this.state.bookings.some(b=>b.expertId==='expert-chen'&&b.title==='陈林')){await this.transaction(s=>{for(const e of s.experts)if(e.id==='expert-chen'&&e.name==='陈林')e.name='陈琳';for(const b of s.bookings)if(b.expertId==='expert-chen'&&b.title==='陈林')b.title='陈琳'})}return this.snapshot()}
+ async init(){this.state=await this.adapter.get(KEY);if(!this.state||this.state.version!==2){this.state=initial();await this.adapter.set(KEY,this.state)}else if(!this.state.artAssessmentRevision||this.state.experts.some(e=>e.id==='expert-chen'&&e.name==='陈林')||this.state.activities.some(a=>a.id==='activity-2'&&a.title==='以墨为语 · 情绪水墨小组')||this.state.bookings.some(b=>b.title==='陈林'&&b.expertId==='expert-chen'||b.title==='以墨为语 · 情绪水墨小组'&&b.activityId==='activity-2')){await this.transaction(s=>{for(const e of s.experts)if(e.id==='expert-chen'&&e.name==='陈林')e.name='陈琳';for(const b of s.bookings){if(b.expertId==='expert-chen'&&b.title==='陈林')b.title='陈琳';if(b.activityId==='activity-2'&&b.title==='以墨为语 · 情绪水墨小组')b.title='心栖意境 · 线下书画静心活动'}for(const a of s.activities)if(a.id==='activity-2'&&a.title==='以墨为语 · 情绪水墨小组')a.title='心栖意境 · 线下书画静心活动';if(!s.artAssessmentRevision){for(const e of doctorExamples())if(!s.experts.some(x=>x.id===e.id))s.experts.push(e);s.artAssessmentRevision=1}})}return this.snapshot()}
  snapshot(){return clone(this.state)}
  transaction(fn){const task=this.queue.then(async()=>{const draft=clone(this.state),result=fn(draft);await this.adapter.set(KEY,draft);this.state=draft;return result});this.queue=task.catch(()=>{});return task}
  async media(work){return work.image||await this.adapter.get(MEDIA+work.id)||''}
@@ -85,6 +92,8 @@ class Repository{
  authorizedWorks(){return clone(this.state.works.filter(w=>w.authorized))}
  comment(id,text){if(!String(text).trim())return Promise.reject(Error('请填写美育评语'));if(/诊断|抑郁症|焦虑症|双相|确诊|用药|药物|病情|人格障碍|患有/.test(text))return Promise.reject(Error('请仅从美育和艺术表达角度评论，不能使用心理诊断或治疗类文字'));return this.transaction(s=>{const w=s.works.find(w=>w.id===id&&w.authorized);if(!w)throw Error('作品未授权或授权已撤回');w.comments.push({text:String(text).slice(0,300),time:new Date().toISOString()})})}
  addReport(answers){if(answers.length!==12||answers.some(v=>!Number.isInteger(v)||v<0||v>3))return Promise.reject(Error('请完成全部 12 题'));return this.transaction(s=>{const values=dimensions.map((_,j)=>questions.reduce((n,q,i)=>n+(q.dimension===j?answers[i]:0),0));const highest=Math.max(...values);const text=highest<=2?'近期这些感受出现得较少。可以继续用笔墨记录平常的小感受。':highest<=5?'近期有些感受值得你停下来照顾。可以选择书写、创作，或向信任的人表达。':'近期有些感受出现得较频繁。除了书画体验，也可以向可信任的成年人或专业人员寻求支持。';const report={id:uid('report'),time:new Date().toISOString(),answers:answers.slice(),values,dimensions:dimensions.slice(),text,emotion:'情绪参考',note:'自编美育情绪觉察问卷，未经量表信效度验证；仅作自我觉察，不诊断、不定性。'};s.reports.unshift(report);return clone(report)})}
+ // PHQ-9 mainland Chinese form: 9 items, 0–3 each, past two weeks. Item 9 is independent of the total.
+ addPhqReport(answers){if(answers.length!==9||answers.some(v=>!Number.isInteger(v)||v<0||v>3))return Promise.reject(Error('请完成全部 9 题'));return this.transaction(s=>{const score=answers.reduce((a,b)=>a+b,0),band=score<5?'0–4':score<10?'5–9':score<15?'10–14':score<20?'15–19':'20–27';const safetyFlag=answers[8]>0;const report={id:uid('report'),scaleId:'phq9',title:'PHQ-9 筛查参考',score,maxScore:27,band,safetyFlag,time:new Date().toISOString(),answers:answers.slice(),emotion:'筛查参考',text:score<5?'本次填写中，相关困扰出现得较少。低分也不代表无需关注自己的感受。':score<10?'本次填写提示有一些困扰。可以留意持续时间及日常影响，必要时向专业人员求助。':'本次填写提示有较多困扰，建议向可信任的成年人表达，并由专业人员进一步评估。书画活动不能替代专业支持。',note:'PHQ-9：过去两周，9 题各 0–3 分，总分 0–27。仅作筛查参考，不作疾病诊断或安全风险分级。',source:phqSource};s.reports.unshift(report);return clone(report)})}
  deleteReport(id){return this.transaction(s=>{s.reports=s.reports.filter(r=>r.id!==id)})}
  newSession(){return this.transaction(s=>{const session={id:uid('chat'),time:new Date().toISOString(),paused:false,messages:[{role:'assistant',text:'你好，我是本地预设问答模拟的笔墨陪伴。今天，你想用怎样的线条或颜色表达心情？',time:new Date().toISOString()}]};s.sessions.unshift(session);return clone(session)})}
  chat(id,text){text=String(text||'').trim().slice(0,600);if(!text)return Promise.reject(Error('请先写下一句话'));return this.transaction(s=>{const session=s.sessions.find(x=>x.id===id);if(!session)throw Error('会话不存在');if(session.paused)throw Error('本次会话已暂停，请查看支持提示或创建新会话');const time=new Date().toISOString();session.messages.push({role:'user',text,time});const matches=matchRisk(text);if(matches.length){session.paused=true;const work={id:uid('risk'),userId:s.profile.id,sessionId:id,time,status:'待跟进',tags:['关键词触发','待人工核验'],demo:false,transcript:clone(session.messages),notes:[]};s.cases.unshift(work);return{risk:true,notice:riskNotice,session:clone(session),caseId:work.id}}session.messages.push({role:'assistant',text:reply(text),time});return{risk:false,session:clone(session)}})}
@@ -103,5 +112,5 @@ class Repository{
  caseNote(id,text){if(!String(text).trim())return Promise.reject(Error('留言不能为空'));return this.transaction(s=>{const c=s.cases.find(c=>c.id===id);if(!c)throw Error('工单不存在');c.notes.push({text:String(text).slice(0,400),time:new Date().toISOString()})})}
  async reset(){const previous=this.state.works.slice();await this.adapter.set(KEY,initial());this.state=await this.adapter.get(KEY);for(const w of previous)await this.adapter.remove(MEDIA+w.id)}
 }
-return{Repository,KEY,MEDIA,uid,clone,moods,disclaimer,riskNotice,riskWords,matchRisk,demoQuestions,demoProgress,questions,dimensions,calligraphyBrushes,paintingBrushes,inkColors,paintingColors,guides,greetings,dateLabel,nextDate};
+return{Repository,KEY,MEDIA,uid,clone,moods,disclaimer,riskNotice,riskWords,matchRisk,demoQuestions,demoProgress,assessment,phqQuestions,phqSource,phqSupport,artReferences,questions,dimensions,calligraphyBrushes,paintingBrushes,inkColors,paintingColors,guides,greetings,dateLabel,nextDate};
 });
