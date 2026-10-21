@@ -15,7 +15,7 @@ page{height:100%;background:#F8F5EE;color:#222;font-size:28rpx;font-family:Morun
 
 .crop-stage{position:relative;margin:28rpx auto;overflow:hidden;background:#ddd6c9}.crop-stage>image{display:block;width:100%;height:100%}.crop-selection{position:absolute;box-sizing:border-box;border:4rpx solid #A82020;box-shadow:0 0 0 1000rpx #2227}.crop-handle{position:absolute;width:56rpx;height:56rpx;z-index:2}.crop-handle>view{position:absolute;inset:14rpx;background:#fff8e7;border:4rpx solid #A82020;border-radius:4rpx}.crop-handle.nw{top:-18rpx;left:-18rpx}.crop-handle.ne{top:-18rpx;right:-18rpx}.crop-handle.sw{bottom:-18rpx;left:-18rpx}.crop-handle.se{bottom:-18rpx;right:-18rpx}
 
-.modules .booking-module{padding:0;display:block;overflow:hidden}.booking-entry{padding:28rpx 25rpx 20rpx}.booking-photo-swiper{width:100%;height:440rpx}.booking-photo{display:block;width:100%;height:100%}
+.modules .booking-module{padding:0;display:block;overflow:hidden}.booking-entry{padding:28rpx 25rpx 20rpx}.booking-photo-swiper{width:calc(100% - 48rpx);height:400rpx;margin:0 24rpx;border-radius:24rpx;overflow:hidden}.booking-photo{display:block;width:100%;height:100%;border-radius:24rpx}
 
 .studio-top-actions{display:flex;gap:8rpx;flex:none;align-items:center}.studio-top-actions button{font-size:19rpx;padding:0 10rpx;white-space:nowrap;margin:0}.studio>.row:first-child .title{font-size:34rpx;white-space:nowrap}
 
