@@ -6,7 +6,7 @@
 心
 源</view><text class="splash-sub">以笔墨润心境，以美育疗情绪</text><button class="primary splash-button" data-action="enter" bindtap="act">进入疗愈空间</button><text class="tiny">青少年书画美育情绪辅助 Demo</text></view>
   <view wx:elif="{{route === 'write' || route === 'paint'}}" class="studio">
-    <view class="row"><text class="title">{{title}}</text><button wx:if="{{route === 'write'}}" size="mini" data-action="music" bindtap="act">{{musicPlaying ? '暂停音乐' : '静心音乐'}}</button></view>
+    <view class="row"><text class="title">{{title}}</text><button wx:if="{{route === 'write'}}" size="mini" data-action="music" bindtap="act">{{musicPlaying ? '暂停音乐' : '播放音乐'}}</button></view>
     <button size="mini" class="reference-entry" data-action="art-reference" bindtap="act">{{route === 'write' ? '书法鉴赏与参考' : '国画鉴赏与参考'}}</button>
     <text class="studio-guide">{{route === 'write' ? guide : '随心画，无对错，笔墨即心情'}}</text>
     <view wx:if="{{route === 'write'}}" class="row"><picker range="{{grids}}" value="{{gridIndex}}" bindchange="gridChange"><view class="pick">{{grids[gridIndex]}} ▾</view></picker><button size="mini" data-action="scroll" bindtap="act">{{scrollMode ? '切换为书写' : '切换为滚动'}}</button></view>

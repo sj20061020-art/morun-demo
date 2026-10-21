@@ -23,5 +23,22 @@
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "subPackages": [
+    {
+      "root": "writing",
+      "name": "writing",
+      "pages": [
+        "pages/write/write"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/home/home": {
+      "network": "all",
+      "packages": [
+        "writing"
+      ]
+    }
+  }
 }

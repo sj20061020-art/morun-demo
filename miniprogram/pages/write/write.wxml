@@ -1,1 +1,1 @@
-<include src="../../runtime/page.wxml"/>
+<view class="empty">正在铺纸…</view>
