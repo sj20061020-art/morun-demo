@@ -1,10 +1,7 @@
 <view class="app-frame">
   <view class="topbar" wx:if="{{route !== 'splash'}}"><view class="brand" data-route="home" bindtap="go"><text class="seal">墨
 润</text><text>墨润心源</text></view><text class="tiny">笔墨润心</text></view>
-  <view wx:if="{{route === 'splash'}}" class="splash"><image src="/assets/home-landscape.jpg" class="splash-image" mode="aspectFit"/><view class="splash-title">墨
-润
-心
-源</view><text class="splash-sub">以笔墨润心境，以美育疗情绪</text><button class="primary splash-button" data-action="enter" bindtap="act">进入疗愈空间</button><text class="tiny">青少年书画美育情绪辅助 Demo</text></view>
+  <view wx:if="{{route === 'splash'}}" class="splash"><image src="/assets/splash-cover.jpg" class="splash-image" mode="aspectFill"/><button class="primary splash-button" data-action="enter" bindtap="act">进入疗愈空间</button><text class="tiny">青少年书画美育情绪辅助 Demo</text></view>
   <view wx:elif="{{route === 'write' || route === 'paint'}}" class="studio">
     <view class="row"><text class="title">{{title}}</text><button wx:if="{{route === 'write'}}" size="mini" data-action="music" bindtap="act">{{musicPlaying ? '暂停音乐' : '播放音乐'}}</button></view>
     <button size="mini" class="reference-entry" data-action="art-reference" bindtap="act">{{route === 'write' ? '书法鉴赏与参考' : '国画鉴赏与参考'}}</button>
