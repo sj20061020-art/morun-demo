@@ -40,14 +40,14 @@ module.exports=function(route){return{
  case'music':this.toggleMusic();break;
  case'quiz-prev':if(this.data.questionIndex>0)this.setData({questionIndex:this.data.questionIndex-1,question:M.assessment(this.data.assessmentId).questions[this.data.questionIndex-1].text});break;
  case'quiz-next':await this.nextQuestion();break;
- case'report-delete':if(await ask('删除本地报告？','自测记录将从本机移除。')){await this.repo.deleteReport(this.data.report.id);wx.redirectTo({url:'/pages/library/library?filter=report'})}break;
+ case'report-delete':if(await ask('删除本地报告？','自测记录将被删除。')){await this.repo.deleteReport(this.data.report.id);wx.redirectTo({url:'/pages/library/library?filter=report'})}break;
  case'chat-new':this.chatId=(await this.repo.newSession()).id;this.setData({chatText:''});await this.refresh();break;
  case'chat-send':await this.sendChat(this.data.chatText);break;
  case'filter':this.setData({filter:id,workPage:0});await this.refresh();break;
  case'works-prev':this.setData({workPage:Math.max(0,this.data.workPage-1)});await this.refresh();break;
  case'works-next':this.setData({workPage:Math.min(this.data.totalPages-1,this.data.workPage+1)});await this.refresh();break;
  case'work':await this.openWork(id,false);break;case'mentor-work':await this.openWork(id,true);break;
- case'work-delete':if(await ask('删除作品？','图片、授权与美育评语将从本机移除。')){await this.repo.deleteWork(id);removeMediaCache(id);this.close();await this.refresh();toast('作品已删除')}break;
+ case'work-delete':if(await ask('删除作品？','图片、授权与美育评语将被删除。')){await this.repo.deleteWork(id);removeMediaCache(id);this.close();await this.refresh();toast('作品已删除')}break;
  case'preview-image':wx.previewImage({urls:[this.data.selectedWork.image],current:this.data.selectedWork.image});break;
  case'album':wx.saveImageToPhotosAlbum({filePath:this.data.selectedWork.image,success:()=>toast('已保存到相册'),fail:()=>toast('未保存到相册，可检查相册权限')});break;
  case'comment-save':await this.repo.comment(this.data.selectedWork.id,this.data.form.comment||'');await this.openWork(this.data.selectedWork.id,true);toast('美育评语已保存');break;
@@ -57,20 +57,20 @@ module.exports=function(route){return{
  case'profile-save':await this.repo.updateProfile(this.data.form);this.close();await this.refresh();toast('个人信息已保存');break;
  case'my-chats':this.setData({sheet:'chats'});break;case'my-bookings':this.setData({sheet:'bookings'});break;case'my-reports':this.setData({filter:'report',workPage:0});wx.redirectTo({url:'/pages/library/library?filter=report'});break;
  case'open-chat':wx.redirectTo({url:'/pages/chat/chat?id='+id});break;
- case'delete-chat':if(await ask('删除本地会话？','关联的本机工单也会移除。')){await this.repo.deleteSession(id);await this.refresh()}break;
+ case'delete-chat':if(await ask('删除本地会话？','关联的工单也会移除。')){await this.repo.deleteSession(id);await this.refresh()}break;
  case'my-messages':this.setData({sheet:'messages'});break;
  case'privacy':this.setData({sheet:'privacy'});break;
- case'reset':if(await ask('清空 V2 本机记录？','作品、自测、对话、预约与工单会删除，演示数据会恢复。V1 不受影响。')){const oldWorks=this.repo.snapshot().works;await this.repo.reset();oldWorks.forEach(w=>removeMediaCache(w.id));this.close();await this.refresh();toast('V2 已重置')}break;
+ case'reset':if(await ask('清空 V2 记录？','作品、自测、对话、预约与工单会删除，演示数据会恢复。V1 不受影响。')){const oldWorks=this.repo.snapshot().works;await this.repo.reset();oldWorks.forEach(w=>removeMediaCache(w.id));this.close();await this.refresh();toast('V2 已重置')}break;
  case'case':this.openCase(id);break;
  case'case-progress':await this.repo.caseStatus(id,'跟进中');await this.refresh();this.openCase(id);break;
  case'case-done':await this.repo.caseStatus(id,'处理完成');await this.refresh();this.openCase(id);break;
- case'case-note':await this.repo.caseNote(this.data.selectedCase.id,this.data.form.caseNote||'');await this.refresh();this.openCase(this.data.selectedCase.id);toast('本机留言已保存');break;
+ case'case-note':await this.repo.caseNote(this.data.selectedCase.id,this.data.form.caseNote||'');await this.refresh();this.openCase(this.data.selectedCase.id);toast('留言已保存');break;
  case'assist':this.app.assistCase=id;wx.redirectTo({url:'/pages/experts/experts'});break;
  case'booking-confirm':await this.repo.bookingStatus(id,'已确认');await this.refresh();break;
  case'booking-done':await this.repo.bookingStatus(id,'已完成');await this.refresh();break;
  case'booking-cancel':await this.repo.bookingStatus(id,'已取消');await this.refresh();break;
  case'new-expert':this.expertForm();break;case'edit-expert':this.expertForm(id);break;
- case'expert-save':await this.repo.saveExpert(Object.assign({},this.data.form,{id:this.data.editExpertId||null,active:this.data.expertActive}));this.close();await this.refresh();toast('示例专家已保存');break;
+ case'expert-save':await this.repo.saveExpert(Object.assign({},this.data.form,{id:this.data.editExpertId||null,active:this.data.expertActive}));this.close();await this.refresh();toast('专家已保存');break;
  case'expert-toggle':await this.repo.toggleExpert(id);await this.refresh();break;
  }}catch(err){this.fail(err)}},
  brushChange(e){const brushIndex=+e.detail.value;this.setData({brushIndex,eraser:false});this.engine.configure({brush:brushIndex,eraser:false})},
@@ -81,7 +81,7 @@ module.exports=function(route){return{
  consentChange(e){this.setData({'form.consent':e.detail.value.includes('yes')})},
  expertActiveChange(e){this.setData({expertActive:e.detail.value})},
  async privacyChange(e){try{await this.repo.privacy(e.detail.value);this.setData({privacy:e.detail.value});toast('默认隐私设置已保存')}catch(err){this.fail(err)}},
- async authorizeChange(e){try{await this.repo.authorize(this.data.selectedWork.id,e.detail.value);await this.openWork(this.data.selectedWork.id,false);toast(e.detail.value?'已授权本机导师':'已撤回授权')}catch(err){const id=this.data.selectedWork.id;await this.openWork(id,false);this.fail(err)}},
+ async authorizeChange(e){try{await this.repo.authorize(this.data.selectedWork.id,e.detail.value);await this.openWork(this.data.selectedWork.id,false);toast(e.detail.value?'已授权导师':'已撤回授权')}catch(err){const id=this.data.selectedWork.id;await this.openWork(id,false);this.fail(err)}},
  answerChange(e){const answers=this.data.answers.slice();answers[this.data.questionIndex]=+e.detail.value;this.setData({answers,answered:answers.filter(v=>v>=0).length});if(this.data.assessmentId==='phq9'&&this.data.questionIndex===8&&answers[8]>0)wx.showModal({title:'请让身边的人陪伴你',content:M.phqSupport,showCancel:false})},
  async nextQuestion(){if(this.data.answers[this.data.questionIndex]<0)throw Error('请先选择当前题的答案');if(this.data.questionIndex<this.data.questionCount-1){const i=this.data.questionIndex+1;this.setData({questionIndex:i,question:M.assessment(this.data.assessmentId).questions[i].text})}else{const report=await (this.data.assessmentId==='phq9'?this.repo.addPhqReport(this.data.answers):this.repo.addReport(this.data.answers));wx.redirectTo({url:'/pages/result/result?id='+report.id})}},
  async initCanvas(){try{if(!this.repo||!this.repo.state)await this.app.ready;const query=this.createSelectorQuery();query.select('#artCanvas').fields({node:true,size:true}).exec(res=>{if(!res[0]||!res[0].node){this.fail(Error('Canvas 2D 不可用，请使用支持的微信基础库与开发者工具'));return}const item=res[0],canvas=item.node,width=route==='paint'?Math.floor(Math.min(item.width,(wx.getWindowInfo?wx.getWindowInfo().windowHeight:wx.getSystemInfoSync().windowHeight)*(wx.getWindowInfo?(wx.getWindowInfo().windowHeight<720?.32:.43):(wx.getSystemInfoSync().windowHeight<720?.32:.43)))):Math.floor(item.width),height=route==='write'?Math.round(width*3.2):width;const dpr=Math.min(2,wx.getWindowInfo?wx.getWindowInfo().pixelRatio:wx.getSystemInfoSync().pixelRatio);canvas.width=width*dpr;canvas.height=height*dpr;canvas.getContext('2d').scale(dpr,dpr);this.canvas=canvas;this.setData({canvasHeight:height,canvasSide:width});
@@ -92,16 +92,16 @@ module.exports=function(route){return{
  touchEnd(e){if(!this.touchDown||!this.engine)return;this.touchDown=false;if(this.dragging){const p=this.touchPoint(e);this.engine.placeMaterial(p.x,p.y)}else this.engine.end()},
  async saveArt(){if(this.saving)return;this.saving=true;try{const out=this.engine.exportCanvas(),x=this.canvas.getContext('2d');x.clearRect(0,0,this.engine.width,this.engine.height);x.drawImage(out,0,0);
  const temp=await new Promise((resolve,reject)=>wx.canvasToTempFilePath({canvas:this.canvas,fileType:'jpg',quality:.8,destWidth:Math.min(720,this.engine.width*2),destHeight:Math.min(720,this.engine.width*2)*this.engine.height/this.engine.width,success:r=>resolve(r.tempFilePath),fail:reject},this));
- const bytes=await new Promise((resolve,reject)=>wx.getFileSystemManager().readFile({filePath:temp,encoding:'base64',success:r=>resolve(r.data),fail:reject}));if(bytes.length>800000)throw Error('图片过大，当前本机单图缓存限制约 600KB。请减少长幅细节或缩小输出后重试。');
- await this.repo.addWork({type:route,emotion:this.data.moods[this.data.selectedMood],note:this.data.form.note||''},'data:image/jpeg;base64,'+bytes);this.close();toast('作品已保存到本机');wx.redirectTo({url:'/pages/library/library'});
+ const bytes=await new Promise((resolve,reject)=>wx.getFileSystemManager().readFile({filePath:temp,encoding:'base64',success:r=>resolve(r.data),fail:reject}));if(bytes.length>800000)throw Error('图片过大，当前单图缓存限制约 600KB。请减少长幅细节或缩小输出后重试。');
+ await this.repo.addWork({type:route,emotion:this.data.moods[this.data.selectedMood],note:this.data.form.note||''},'data:image/jpeg;base64,'+bytes);this.close();toast('作品已保存到');wx.redirectTo({url:'/pages/library/library'});
  }catch(e){this.fail(e)}finally{this.saving=false;this.engine.render()}},
  toggleMusic(){if(!this.music){this.music=wx.createInnerAudioContext();this.music.src='/assets/calm.wav';this.music.loop=true;this.music.onError(()=>toast('音乐暂无法播放'))}const on=!this.data.musicPlaying;if(on)this.music.play();else this.music.pause();this.setData({musicPlaying:on})},
  async initRadar(){if(!this.data.report||this.data.report.scaleId==='phq9')return;const query=this.createSelectorQuery();query.select('#radarCanvas').fields({node:true,size:true}).exec(res=>{if(!res[0]||!res[0].node)return;const c=res[0].node,w=res[0].width,h=250;c.width=w;c.height=h;B.radar(c.getContext('2d'),w,h,this.data.report.values)})},
  chatInput(e){this.setData({chatText:e.detail.value});if(!this.data.chatPaused&&M.matchRisk(e.detail.value).length)this.sendChat(e.detail.value).catch(err=>this.fail(err))},
- async sendChat(text){if(this.chatBusy||this.data.chatPaused)return;this.chatBusy=true;try{const out=await this.repo.chat(this.chatId,text);this.setData({chatText:''});await this.refresh();if(out.risk){this.setData({chatPaused:true});wx.showModal({title:'先照顾好此刻的自己',content:M.riskNotice,confirmText:'预约演示',cancelText:'暂不',success:r=>{if(r.confirm)wx.redirectTo({url:'/pages/booking/booking'})}})}}finally{this.chatBusy=false}},
+ async sendChat(text){if(this.chatBusy||this.data.chatPaused)return;this.chatBusy=true;try{const out=await this.repo.chat(this.chatId,text);this.setData({chatText:''});await this.refresh();if(out.risk){this.setData({chatPaused:true});wx.showModal({title:'先照顾好此刻的自己',content:M.riskNotice,confirmText:'预约记录',cancelText:'暂不',success:r=>{if(r.confirm)wx.redirectTo({url:'/pages/booking/booking'})}})}}finally{this.chatBusy=false}},
  async openWork(id,mentor){const w=this.repo.snapshot().works.find(w=>w.id===id);if(!w||mentor&&!w.authorized)throw Error('作品不存在或未授权');this.setData({sheet:'work',mentorView:mentor,selectedWork:Object.assign({},w,{image:mediaPath(w.id,await this.repo.media(w)),date:date(w.time)}),form:{comment:''}})},
  bookingForm(kind,id){const s=this.repo.snapshot(),target=kind==='activity'?s.activities.find(a=>a.id===id):s.experts.find(e=>e.id===id&&e.active);if(!target)throw Error('内容已不可用');const occupied=s.bookings.filter(b=>b.expertId===id&&b.status!=='已取消').map(b=>b.slot),slots=kind==='expert'?target.slots.filter(t=>!occupied.includes(t)):[];this.setData({sheet:'booking',bookingKind:kind,target,slots,slotIndex:0,form:{name:this.app.assistCase?(s.cases.find(c=>c.id===this.app.assistCase)?.userId||s.profile.nickname):s.profile.nickname,grade:s.profile.grade,contact:'',request:'',slot:slots[0]||target.time||'',consent:false}})},
- async submitBooking(){const b=await this.repo.book(Object.assign({},this.data.form,{kind:this.data.bookingKind,caseId:this.app.assistCase||null,activityId:this.data.bookingKind==='activity'?this.data.target.id:null,expertId:this.data.bookingKind==='expert'?this.data.target.id:null}));if(this.app.assistCase){await this.repo.caseNote(this.app.assistCase,'本机协助预约演示回执号：'+b.id);this.app.assistCase=null}this.setData({sheet:'receipt',receipt:b});await this.refresh()},
+ async submitBooking(){const b=await this.repo.book(Object.assign({},this.data.form,{kind:this.data.bookingKind,caseId:this.app.assistCase||null,activityId:this.data.bookingKind==='activity'?this.data.target.id:null,expertId:this.data.bookingKind==='expert'?this.data.target.id:null}));if(this.app.assistCase){await this.repo.caseNote(this.app.assistCase,'预约记录回执号：'+b.id);this.app.assistCase=null}this.setData({sheet:'receipt',receipt:b});await this.refresh()},
  openCase(id){const c=this.repo.snapshot().cases.find(c=>c.id===id);if(!c)throw Error('工单不存在');this.setData({sheet:'case',selectedCase:Object.assign({},c,{date:date(c.time)}),form:{caseNote:''}})},
- expertForm(id){const e=this.repo.snapshot().experts.find(e=>e.id===id)||{name:'',title:'示例专家 · 资料待核验',specialty:'',bio:'模拟资料，未经核验，非真实入驻。',slots:[],active:true};this.setData({sheet:'expert',editExpertId:id||null,expertActive:e.active,form:Object.assign({},e,{slots:e.slots.join('\n')})})}
+ expertForm(id){const e=this.repo.snapshot().experts.find(e=>e.id===id)||{name:'',title:'书画美育',specialty:'',bio:'请填写服务方向与预约说明。',slots:[],active:true};this.setData({sheet:'expert',editExpertId:id||null,expertActive:e.active,form:Object.assign({},e,{slots:e.slots.join('\n')})})}
 }};
