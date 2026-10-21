@@ -9,7 +9,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 function rng(seed){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}}
 function rgb(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]}
 class Brush{
- constructor(canvas,opts){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.width=opts.width;this.height=opts.height;this.factory=opts.makeCanvas;this.raf=opts.raf||((fn)=>setTimeout(()=>fn(Date.now()),30));this.cancel=opts.cancel||clearTimeout;this.kind=opts.kind||'write';this.grid='米字格';this.settings={brush:0,color:'#222222',size:12,eraser:false};this.history=[];this.future=[];this.current=null;this.frame=0;this.drying=null;this.drag=null;this.tips={};
+ constructor(canvas,opts){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.width=opts.width;this.height=opts.height;this.factory=opts.makeCanvas;this.raf=opts.raf||((fn)=>setTimeout(()=>fn(Date.now()),30));this.cancel=opts.cancel||clearTimeout;this.resizeCanvas=opts.resizeCanvas||((w,h)=>{canvas.width=w;canvas.height=h});this.originalWidth=opts.width;this.originalHeight=opts.height;this.kind=opts.kind||'write';this.grid='米字格';this.settings={brush:0,color:'#222222',size:12,eraser:false};this.history=[];this.future=[];this.current=null;this.frame=0;this.drying=null;this.drag=null;this.tips={};
  for(const key of ['paper','base','pigment','water','composite'])this[key]=this.layer();this.makePaper();this.render();
  }
  layer(){return this.factory(this.width,this.height)}
@@ -35,14 +35,30 @@ class Brush{
  addMaterial(name){this.finish();this.drag={type:'material',name,x:this.width*.65,y:this.height*.5,size:1};this.render();return this.drag}
  placeMaterial(x,y){if(!this.drag)return;this.drag.x=x;this.drag.y=y;this.material(this.base.getContext('2d'),this.drag);this.history.push(Object.assign({},this.drag));this.future=[];this.drag=null;this.render()}
  seal(text){this.finish();const m={type:'material',name:'印章',text,x:this.width-43,y:this.height-45,size:.65};this.material(this.base.getContext('2d'),m);this.history.push(m);this.future=[];this.render()}
- rebuild(){this.drying=null;this.clearTransient();const x=this.base.getContext('2d');x.clearRect(0,0,this.width,this.height);for(const cmd of this.history){if(cmd.type==='material')this.material(x,cmd);else{this.replayStroke(cmd);this.wetTo(x,cmd,1)}}this.clearTransient();this.render()}
+ // Crop is a replayable history command: undo restores both the paper and its ink.
+ resizePaper(width,height){this.width=width;this.height=height;this.resizeCanvas(width,height);for(const key of ['paper','base','pigment','water','composite'])this[key]=this.layer();this.makePaper()}
+ applyCrop(rect){const old=this.base;this.resizePaper(rect.width,rect.height);this.base.getContext('2d').drawImage(old,rect.x,rect.y,rect.width,rect.height,0,0,rect.width,rect.height)}
+ crop(rect){this.finish();if(this.drag)throw Error('请先放置素材');const r=CropSelection.clamp(rect,this.width,this.height);if(r.x===0&&r.y===0&&r.width===this.width&&r.height===this.height)return;this.history.push(Object.assign({type:'crop'},r));this.future=[];this.rebuild()}
+ rebuild(){this.cancel(this.frame);this.frame=0;this.drying=null;this.resizePaper(this.originalWidth,this.originalHeight);this.clearTransient();const x=this.base.getContext('2d');x.clearRect(0,0,this.width,this.height);for(const cmd of this.history){if(cmd.type==='crop'){this.applyCrop(cmd)}else if(cmd.type==='material')this.material(this.base.getContext('2d'),cmd);else{this.replayStroke(cmd);this.wetTo(this.base.getContext('2d'),cmd,1)}}this.clearTransient();this.render()}
  undo(){this.finish();if(this.history.length){this.future.push(this.history.pop());this.rebuild()}}
  redo(){this.finish();if(this.future.length){this.history.push(this.future.pop());this.rebuild()}}
- clear(){this.cancel(this.frame);this.frame=0;this.drying=null;this.current=null;this.drag=null;this.history=[];this.future=[];this.rebuild()}
+ clear(){this.cancel(this.frame);this.frame=0;this.drying=null;this.current=null;this.drag=null;this.history=[];this.future=[];this.originalWidth=this.width;this.originalHeight=this.height;this.rebuild()}
  exportCanvas(){this.finish();const c=this.layer(),x=c.getContext('2d');if(this.kind==='paint')x.drawImage(this.paper,0,0);else{x.fillStyle='#F8F5EE';x.fillRect(0,0,this.width,this.height)}x.drawImage(this.base,0,0);return c}
- hasInk(){return this.history.length>0||!!this.current}
+ hasInk(){return this.history.some(c=>c.type!=='crop')||!!this.current}
  destroy(){this.cancel(this.frame);this.frame=0}
 }
+
+// Normalized touch/mouse crop selection shared by H5 and WeChat.
+class CropSelection{
+ constructor(width,height){this.width=width;this.height=height;this.minW=Math.min(1,64/width);this.minH=Math.min(1,64/height);this.reset()}
+ static clamp(r,w,h){const width=Math.max(Math.min(64,w),Math.min(w,Math.round(r.width))),height=Math.max(Math.min(64,h),Math.min(h,Math.round(r.height)));return{x:Math.max(0,Math.min(w-width,Math.round(r.x))),y:Math.max(0,Math.min(h-height,Math.round(r.y))),width,height}}
+ reset(ratio){let w=1,h=1;if(ratio){if(this.width/this.height>ratio)w=this.height*ratio/this.width;else h=this.width/ratio/this.height}this.box={x:(1-w)/2,y:(1-h)/2,w,h};this.drag=null;return this.box}
+ start(handle,x,y){this.drag={handle,x,y,box:Object.assign({},this.box)}}
+ move(x,y){if(!this.drag)return;const d=this.drag,b=d.box,dx=x-d.x,dy=y-d.y,clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));if(d.handle==='move'){this.box={...b,x:clamp(b.x+dx,0,1-b.w),y:clamp(b.y+dy,0,1-b.h)};return}let l=b.x,r=b.x+b.w,t=b.y,bt=b.y+b.h;if(d.handle.includes('w'))l=clamp(l+dx,0,r-this.minW);if(d.handle.includes('e'))r=clamp(r+dx,l+this.minW,1);if(d.handle.includes('n'))t=clamp(t+dy,0,bt-this.minH);if(d.handle.includes('s'))bt=clamp(bt+dy,t+this.minH,1);this.box={x:l,y:t,w:r-l,h:bt-t}}
+ size(axis,fraction){const b=this.box;if(axis==='w'){b.w=Math.max(this.minW,Math.min(1,fraction));b.x=Math.min(b.x,1-b.w)}else{b.h=Math.max(this.minH,Math.min(1,fraction));b.y=Math.min(b.y,1-b.h)}}
+ rect(){const b=this.box;return CropSelection.clamp({x:b.x*this.width,y:b.y*this.height,width:b.w*this.width,height:b.h*this.height},this.width,this.height)}
+}
+
 function radar(ctx,width,height,values){ctx.clearRect(0,0,width,height);const cx=width/2,cy=height/2,r=Math.min(width*.3,height*.32),names=['思绪纷扰','身心疲惫','表达受阻','低落感受'];ctx.save();ctx.font='12px serif';ctx.textAlign='center';for(let level=1;level<=3;level++){ctx.strokeStyle='rgba(85,85,85,.2)';ctx.beginPath();for(let i=0;i<4;i++){const a=-Math.PI/2+i*Math.PI/2,x=cx+Math.cos(a)*r*level/3,y=cy+Math.sin(a)*r*level/3;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}ctx.beginPath();for(let i=0;i<4;i++){const a=-Math.PI/2+i*Math.PI/2,k=(values[i]||0)/9,x=cx+Math.cos(a)*r*k,y=cy+Math.sin(a)*r*k;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.fillStyle='rgba(82,101,92,.2)';ctx.fill();ctx.strokeStyle='#52655C';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#555';for(let i=0;i<4;i++){const a=-Math.PI/2+i*Math.PI/2;ctx.fillText(names[i],cx+Math.cos(a)*(r+32),cy+Math.sin(a)*(r+20)+4)}ctx.restore()}
-return{Brush,radar};
+return{Brush,radar,CropSelection};
 });
