@@ -7,8 +7,20 @@ let current='splash',generation=0,engine=null,audio=null,musicPlaying=false,answ
 const date=t=>M.dateLabel(t);
 
 let musicWanted=false,musicPausedByUser=false,musicEpoch=0;
+
+let musicFallbackPromise=null,musicBlobURL=null;
+async function bufferWritingMusic(){if(musicFallbackPromise)return musicFallbackPromise;
+ musicFallbackPromise=(async()=>{const url=new URL('../assets/writing-music.mp3',location.href).href,chunk=131072;
+  async function part(start,end){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);try{const response=await fetch(url,{headers:{Range:'bytes='+start+'-'+end},signal:controller.signal});if(!response.ok)throw Error('Audio HTTP '+response.status);const range=response.headers.get('Content-Range'),bytes=await response.arrayBuffer();return{status:response.status,range,bytes}}finally{clearTimeout(timeout)}}
+  const first=await part(0,chunk-1);let chunks;
+  if(first.status===200){chunks=[first.bytes]}else{const match=/^bytes 0-(\d+)\/(\d+)$/.exec(first.range||'');if(!match)throw Error('Invalid audio byte range');const total=Number(match[2]);if(first.bytes.byteLength!==Number(match[1])+1||first.bytes.byteLength!==Math.min(chunk,total))throw Error('Incomplete first audio range');chunks=Array(Math.ceil(total/chunk));chunks[0]=first.bytes;let next=1;await Promise.all(Array.from({length:Math.min(4,chunks.length-1)},async()=>{while(next<chunks.length){const i=next++,start=i*chunk,end=Math.min(total-1,start+chunk-1),p=await part(start,end);if(p.status!==206||p.range!=='bytes '+start+'-'+end+'/'+total||p.bytes.byteLength!==end-start+1)throw Error('Incomplete audio range');chunks[i]=p.bytes}}))}
+  musicBlobURL=URL.createObjectURL(new Blob(chunks,{type:'audio/mpeg'}));
+  if(audio&&audio.readyState<2){const wanted=musicWanted&&!musicPausedByUser&&current==='write'&&!document.hidden;musicEpoch++;audio.src=musicBlobURL;audio.load();if(wanted)playWritingMusic();else syncMusicButton()}return true;
+ })().catch(()=>{musicFallbackPromise=null;return false});return musicFallbackPromise;
+}
+
 function syncMusicButton(){musicPlaying=!!audio&&!audio.paused&&!audio.error;const b=$('[data-action=music]');if(b){b.textContent=musicPlaying?'Ⅱ 暂停音乐':'♫ 播放音乐';b.setAttribute('aria-pressed',String(musicPlaying))}}
-function writingAudio(){if(!audio){audio=new Audio('../assets/writing-music.mp3');audio.loop=true;audio.preload='metadata';audio.volume=.45;for(const event of ['play','playing','pause','ended','error'])audio.addEventListener(event,()=>{if((event==='play'||event==='playing')&&(!musicWanted||document.hidden)){audio.pause()}syncMusicButton()})}return audio}
+function writingAudio(){if(!audio){audio=new Audio('../assets/writing-music.mp3');audio.loop=true;audio.preload='metadata';audio.volume=.45;setTimeout(()=>{if(current==='write'&&audio.readyState<1)bufferWritingMusic()},4000);for(const event of ['play','playing','pause','ended','error'])audio.addEventListener(event,()=>{if((event==='play'||event==='playing')&&(!musicWanted||document.hidden)){audio.pause()}syncMusicButton()})}return audio}
 async function playWritingMusic(manual=false){const player=writingAudio(),epoch=++musicEpoch;musicWanted=true;if(manual){musicPausedByUser=false;if(player.error)player.load()}try{await player.play();if(epoch!==musicEpoch||!musicWanted||document.hidden||current!=='write'){if(!musicWanted||document.hidden||current!=='write')player.pause();return false}syncMusicButton();return true}catch(e){if(epoch===musicEpoch){syncMusicButton();if(manual&&e.name!=='NotAllowedError'&&e.name!=='AbortError')toast('音乐暂时无法播放，请重试')}return false}}
 function pauseWritingMusic(byUser=false){musicEpoch++;if(byUser){musicPausedByUser=true;musicWanted=false}if(audio)audio.pause();syncMusicButton()}
 // Starting in the navigation tap preserves mobile browser user activation.
